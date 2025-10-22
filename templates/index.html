@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8">
+  <title>Equation Solver</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f3f5f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      padding: 30px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      color: #0077cc;
+      margin-bottom: 5px;
+    }
+
+    header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    nav#swap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      gap: 10px;
+    }
+
+    nav#swap a {
+      padding: 10px 20px;
+      border: none;
+      background: #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+      font-weight: bold;
+    }
+
+    nav#swap a.active {
+      background: #0077cc;
+      color: white;
+      transform: scale(1.05);
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      resize: none;
+      font-size: 16px;
+      background: #fafafa;
+    }
+
+    .solve-btn {
+      background: #0077cc;
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 10px;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+
+    .solve-btn:hover {
+      background: #005fa3;
+    }
+
+    .matrix-inputs {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .input-group label {
+      margin-bottom: 5px;
+      color: #444;
+      font-weight: bold;
+    }
+
+    .input-group input {
+      width: 100px;
+      padding: 5px;
+      border-radius: 8px;
+      border: 1px solid #bbb;
+      text-align: center;
+    }
+
+    #inputs {
+      text-align: center;
+    }
+
+    #result {
+      margin-top: 30px;
+      background: #eef7ff;
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    #result h2 {
+      color: #0077cc;
+    }
+
+    #result p {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    input[type="number"],input[type='text'] {
+      padding: 5px;
+      width: 70px;
+      text-align: center;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      transition: 0.2s;
+    }
+
+    input[type="number"]:focus {
+      border-color: #3498db;
+      outline: none;
+      box-shadow: 0 0 5px #3498db;
+    }
+
+    input[type=button] {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 10px;
+      margin: 5px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    input[type=button]:hover {
+      background: #2980b9;
+      transform: scale(1.05);
+    }
+
+    #inputs {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎯 Equation Solver</h1>
+      <p>حل المعادلات بسهولة — أدخل معادلاتك أو مصفوفة القيم</p>
+    </header>
+
+    <nav id="swap">
+      <a data-target="Matrix">📊 Equation Matrix</a>
+      <a data-target="Text" class="active">🧮 Equation Text</a>
+    </nav>
+
+    <section id="Text" class="section active">
+      <form method="POST" action="/">
+        <textarea name="equation" id="equation" placeholder="مثال: 2x + 3y = 5"></textarea><br>
+        
+        <button type="submit" class="solve-btn">حل المعادلة</button>
+      </form>
+    </section>
+
+
+    <section id="Matrix" class="section">
+      <div class="matrix-inputs">
+        <div class="input-group">
+          <label>عدد المتغيرات</label>
+          <input type="number" id="col" placeholder="مثلاً 3">
+        </div>
+        <div class="input-group">
+          <label>عدد المعادلات</label>
+          <input type="number" id="row" placeholder="مثلاً 3">
+        </div>
+        <div>
+          <label>Set Matrix</label>
+          <input type="button" id="btnMatrix" onclick="Matrix()" value="Make Matrix">
+        </div>
+      </div>
+      <div id="inputs"></div>
+    </section>
+
+    <footer id="result">
+      <span>المعادلات</span>
+      <br>
+      <span>{{j}}</span>
+      <h2>🧩 النتيجة:</h2>
+      <p>{{ solve }}</p>
+    </footer>
+  </div>
+
+  <script>
+    let Elements = document.querySelectorAll("a[data-target]");
+    let IDTarget = {
+      current: document.getElementById("Text"),
+      link: document.querySelector("a[data-target='Text']")
+    };
+
+    // 🔹 التنقل بين الأقسام
+    Elements.forEach(function(element) {
+      element.addEventListener("click", function() {
+        let target = element.getAttribute("data-target");
+
+        IDTarget.current.classList.remove("active");
+        IDTarget.current.style.display = 'none';
+        IDTarget.link.classList.remove("active");
+
+        IDTarget = {
+          current: document.getElementById(target),
+          link: document.querySelector(`a[data-target='${target}']`)
+        };
+
+        IDTarget.current.classList.add("active");
+        IDTarget.current.style.display = 'block';
+        IDTarget.link.classList.add("active");
+      });
+    });
+
+    // 🔹 إنشاء المصفوفة
+    function Matrix() {
+      let col = parseInt(document.getElementById("col").value) + 1;
+      let row = parseInt(document.getElementById("row").value);
+
+      if (isNaN(col) || isNaN(row)) {
+        alert("من فضلك أدخل أرقام صحيحة للصفوف والأعمدة");
+        return;
+      }
+
+      let inputsDiv = document.getElementById("inputs");
+      inputsDiv.innerHTML = "";
+
+      let html = "<table style='margin:auto;border-collapse:collapse'>";
+      html += '<tr>';
+      for (let i = 0; i < col - 1; i++) {
+        html += `<td style='padding:5px'>
+                  <input type='text' id='var${i}' value='x${i+1}' style='width:60px;text-align:center'>
+                 </td>`;
+      }
+      html += `<td style='padding:5px'>
+                <input type='text' id='const' value='CONST' style='width:60px;text-align:center'>
+               </td>`;
+      html += '</tr>';
+
+      for (let i = 0; i < row; i++) {
+        html += "<tr>";
+        for (let j = 0; j < col; j++) {
+          html += `<td style='padding:5px'>
+                    <input type='number' id='cell_${i}_${j}' style='width:60px;text-align:center'>
+                   </td>`;
+        }
+        html += "</tr>";
+      }
+      html += "</table>";
+      html += "<button id='MatrixButton' onclick='collectData()'>إرسال المصفوفة</button>";
+
+      inputsDiv.innerHTML = html;
+
+      let inputs = document.querySelectorAll("#inputs input");
+
+      if (inputs.length > 0) inputs[0].focus();
+
+      // 🔹 التنقل بالأسهم
+      inputs.forEach(input => {
+        input.addEventListener("keydown", function(e) {
+          let [_, i, j] = this.id.split("_").map(Number);
+          switch (e.key) {
+            case "ArrowRight": e.preventDefault(); moveTo(i, j + 1); break;
+            case "ArrowLeft": e.preventDefault(); moveTo(i, j - 1); break;
+            case "ArrowUp": e.preventDefault(); moveTo(i - 1, j); break;
+            case "ArrowDown": e.preventDefault(); moveTo(i + 1, j); break;
+            case "Enter": e.preventDefault(); moveTo(i, j + 1) || moveTo(i + 1, 0); break;
+          }
+        });
+      });
+
+      function moveTo(i, j) {
+        let target = document.getElementById(`cell_${i}_${j}`);
+        if (target) { target.focus(); return true; }
+        return false;
+      }
+
+      // 🔹 جمع البيانات
+      window.collectData = function() {
+        let matrix = {
+          vars: [],
+          matrix: []
+        };
+
+        for (let i = 0; i < col - 1; i++) {
+          matrix.vars.push(document.getElementById(`var${i}`).value);
+        }
+
+        for (let i = 0; i < row; i++) {
+          matrix.matrix[i] = [];
+          for (let j = 0; j < col; j++) {
+            let cell = document.getElementById(`cell_${i}_${j}`);
+            matrix.matrix[i][j]=(parseFloat(cell.value) || 0);
+          }
+        }
+
+        let txtArea = document.querySelector("textarea[name='equation']");
+        txtArea.value = JSON.stringify(matrix, null, 2);
+        alert("✅ تم جمع البيانات وإرسالها إلى مربع النص!");
+      };
+    }
+  </script>
+</body>
+</html>
