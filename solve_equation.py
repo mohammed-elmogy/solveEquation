@@ -373,7 +373,7 @@ def makeReducedRowEshlon(current,matrix,printed):
     makeReducedRowEshlon(current-1,matrix,printed)
 def gaussian_elimination(input_matrix,printed):
     
-    printed.add_last(f"the ominted Matrix is {input_matrix["matrix"]} and the variable is {input_matrix['vars']}")
+    printed.add_last(f"the ominted Matrix is {input_matrix['matrix']} and the variable is {input_matrix['vars']}")
     current=0
     solve(current,input_matrix["matrix"],printed)
     current=len(input_matrix["matrix"])-1
